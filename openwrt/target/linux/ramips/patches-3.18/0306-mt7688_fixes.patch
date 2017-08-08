@@ -1,0 +1,655 @@
+--- a/arch/mips/ralink/mt7620.c
++++ b/arch/mips/ralink/mt7620.c
+@@ -138,9 +138,20 @@ static struct rt2880_pmx_func i2c_grp_mt
+ 	FUNC("i2c", 0, 4, 2),
+ };
+ 
+-static struct rt2880_pmx_func refclk_grp_mt7628[] = { FUNC("reclk", 0, 36, 1) };
+-static struct rt2880_pmx_func perst_grp_mt7628[] = { FUNC("perst", 0, 37, 1) };
+-static struct rt2880_pmx_func wdt_grp_mt7628[] = { FUNC("wdt", 0, 38, 1) };
++static struct rt2880_pmx_func refclk_grp_mt7628[] = {
++	FUNC("gpio", 1, 37, 1),
++	FUNC("reclk", 0, 37, 1),
++};
++
++static struct rt2880_pmx_func perst_grp_mt7628[] = {
++	FUNC("gpio", 1, 36, 1),
++	FUNC("perst", 0, 36, 1),
++};
++
++static struct rt2880_pmx_func wdt_grp_mt7628[] = {
++	FUNC("gpio", 1, 38, 1),
++	FUNC("wdt", 0, 38, 1),
++};
+ static struct rt2880_pmx_func spi_grp_mt7628[] = { FUNC("spi", 0, 7, 4) };
+ 
+ static struct rt2880_pmx_func sd_mode_grp_mt7628[] = {
+@@ -193,15 +204,54 @@ static struct rt2880_pmx_func wled_kn_gr
+ };
+ 
+ static struct rt2880_pmx_func wled_an_grp_mt7628[] = {
+-	FUNC("rsvd", 3, 35, 1),
+-	FUNC("rsvd", 2, 35, 1),
+-	FUNC("gpio", 1, 35, 1),
+-	FUNC("wled_an", 0, 35, 1),
++	FUNC("rsvd", 3, 44, 1),
++	FUNC("rsvd", 2, 44, 1),
++	FUNC("gpio", 1, 44, 1),
++	FUNC("wled_an", 0, 44, 1),
+ };
+ 
++static struct rt2880_pmx_func p0led_an_grp_mt7628[] = {
++        FUNC("jtdo", 3, 43, 1),
++        FUNC("rsvd", 2, 43, 1),
++        FUNC("gpio", 1, 43, 1),
++        FUNC("p0led_an", 0, 43, 1),
++};
++
++static struct rt2880_pmx_func p1led_an_grp_mt7628[] = {
++        FUNC("jtdi", 3, 42, 1),
++        FUNC("rsvd", 2, 42, 1),
++        FUNC("gpio", 1, 42, 1),
++        FUNC("p1led_an", 0, 42, 1),
++};
++
++static struct rt2880_pmx_func p2led_an_grp_mt7628[] = {
++        FUNC("jtms", 3, 41, 1),
++        FUNC("rsvd", 2, 41, 1),
++        FUNC("gpio", 1, 41, 1),
++        FUNC("p2led_an", 0, 41, 1),
++};
++
++static struct rt2880_pmx_func p3led_an_grp_mt7628[] = {
++        FUNC("jtclk", 3, 40, 1),
++        FUNC("rsvd", 2, 40, 1),
++        FUNC("gpio", 1, 40, 1),
++        FUNC("p3led_an", 0, 40, 1),
++};
++
++static struct rt2880_pmx_func p4led_an_grp_mt7628[] = {
++        FUNC("jtrst", 3, 39, 1),
++        FUNC("rsvd", 2, 39, 1),
++        FUNC("gpio", 1, 39, 1),
++        FUNC("p4led_an", 0, 39, 1),
++};
+ #define MT7628_GPIO_MODE_MASK		0x3
+ 
+ #define MT7628_GPIO_MODE_WLED_KN	48
++#define MT7628_GPIO_MODE_P4LED_AN       42
++#define MT7628_GPIO_MODE_P3LED_AN       40
++#define MT7628_GPIO_MODE_P2LED_AN       38
++#define MT7628_GPIO_MODE_P1LED_AN       36
++#define MT7628_GPIO_MODE_P0LED_AN	34
+ #define MT7628_GPIO_MODE_WLED_AN	32
+ #define MT7628_GPIO_MODE_PWM1		30
+ #define MT7628_GPIO_MODE_PWM0		28
+@@ -237,6 +287,11 @@ static struct rt2880_pmx_group mt7628an_
+ 	GRP_G("gpio", gpio_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_GPIO),
+ 	GRP_G("wled_an", wled_an_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_WLED_AN),
+ 	GRP_G("wled_kn", wled_kn_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_WLED_KN),
++	GRP_G("p0led_an", p0led_an_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_P0LED_AN),
++	GRP_G("p1led_an", p1led_an_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_P1LED_AN),
++	GRP_G("p2led_an", p2led_an_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_P2LED_AN),
++	GRP_G("p3led_an", p3led_an_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_P3LED_AN),
++	GRP_G("p4led_an", p4led_an_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_P4LED_AN),
+ 	{ 0 }
+ };
+ 
+--- a/drivers/spi/spi-mt7621.c
++++ b/drivers/spi/spi-mt7621.c
+@@ -275,6 +275,7 @@ static int mt7621_spi_transfer_full_dupl
+ 	int rx_len = 0;
+ 	u32 data[9] = { 0 };
+ 	u32 val = 0;
++    unsigned char cmd = 0;
+ 
+ 	mt7621_spi_wait_till_ready(spi);
+ 
+@@ -292,8 +293,14 @@ static int mt7621_spi_transfer_full_dupl
+ 			goto msg_done;
+ 		}
+ 
+-		for (i = 0; i < t->len; i++, len++)
+-			data[len / 4] |= buf[i] << (8 * (len & 3));
++		for (i = 0; i < t->len; i++, len++) {
++             if (i == 0) {
++                 cmd = buf[i];
++             }
++             else {
++			    data[(len - 1) / 4] |= buf[i] << (8 * ((len - 1) & 3));
++             }
++        }
+ 		if (speed > t->speed_hz)
+ 			speed = t->speed_hz;
+ 	}
+@@ -308,11 +315,28 @@ static int mt7621_spi_transfer_full_dupl
+ 		goto msg_done;
+ 	}
+ 
+-	for (i = 0; i < len; i += 4)
+-		mt7621_spi_write(rs, MT7621_SPI_DATA0 + i, data[i / 4]);
++    if (len > 0)
++    {
++        mt7621_spi_write (rs, MT7621_SPI_OPCODE, cmd);
++        rx_len --;
++    }
+ 
+-	val |= len * 8;
+-	val |= (rx_len * 8) << 12;
++	for (i = 0; i < (len - 1); i += 4) {
++		mt7621_spi_write(rs, MT7621_SPI_DATA0 + i, data[i / 4]);
++//        if (m->spi->chip_select) {
++//            printk (KERN_INFO "SPI_DATA%d=%08X\n", i, data[i/4]);
++//        }
++    }
++
++    if (len > 0)
++    {
++        val |= (8 << 24);
++	    val |= (len - 1) * 8;
++    	val |= (rx_len * 8) << 12;
++    }
++//    if (m->spi->chip_select) {
++//        printk (KERN_INFO "SPI_MOREBUF=%08X\n", val);
++//    }
+ 	mt7621_spi_write(rs, MT7621_SPI_MOREBUF, val);
+ 
+ 	mt7621_spi_set_cs(spi, 1);
+@@ -337,8 +361,12 @@ static int mt7621_spi_transfer_full_dupl
+ 		if (!buf)
+ 			continue;
+ 
+-		for (i = 0; i < t->len; i++, len++)
+-			buf[i] = data[len / 4] >> (8 * (len & 3));
++		for (i = 0; i < t->len; i++, len++) {
++            if (i == 0)
++                buf[i] = 0xff;
++            else
++    			buf[i] = data[(len - 1) / 4] >> (8 * ((len - 1) & 3));
++        }
+ 	}
+ 
+ msg_done:
+--- /dev/null
++++ b/drivers/misc/rawlcd.c
+@@ -0,0 +1,459 @@
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/clk.h>
++#include <linux/err.h>
++#include <linux/io.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/list.h>
++#include <linux/list_sort.h>
++#include <linux/slab.h>
++#include <linux/genalloc.h>
++#include <linux/miscdevice.h>
++#include <linux/delay.h>
++#include <linux/gpio.h>
++#include <linux/fs.h>
++#include <linux/platform_device.h>
++#include <asm/mipsregs.h>
++#include <asm/mach-ralink/ralink_regs.h>
++#include <asm/mach-ralink/mt7620.h>
++
++
++//==========================================================================
++// Defines
++//==========================================================================
++#define DEVICE_DESC "Raw interface to access LCD"
++#define DEVICE_VERSION "1.00.00"
++
++#define NUM_OF_GPIO    11
++
++struct TRawLcdTransfer
++{
++    unsigned char cmd;
++    unsigned char buf[4];
++};
++
++struct TDevice {
++    // Character Device
++    struct miscdevice miscdev;
++    struct device *dev;
++
++    //
++    bool gpioClaimed[NUM_OF_GPIO];
++};
++
++#define SetRdLow()  {} //__raw_writel ((1 << 11), sysc + 0x640)
++#define SetRdHigh() {} //__raw_writel ((1 << 11), sysc + 0x630)
++#define SetWrLow()  __raw_writel ((1 << (41-32)), sysc + 0x644)
++#define SetWrHigh() __raw_writel ((1 << (41-32)), sysc + 0x634)
++#define SetRsLow()  __raw_writel ((1 << (40-32)), sysc + 0x644)
++#define SetRsHigh() __raw_writel ((1 << (40-32)), sysc + 0x634)
++#define SetCsLow()  __raw_writel ((1 << (44-32)), sysc + 0x644)
++#define SetCsHigh() __raw_writel ((1 << (44-32)), sysc + 0x634)
++
++//==========================================================================
++// Constants
++//==========================================================================
++static const char KDriverName[] = "rawlcd";
++static const int KGpioList[NUM_OF_GPIO] = {0, 1, 2, 3, 36, 37, 38, 39, 40, 41, 44};
++
++//==========================================================================
++// Set Data Pins direction
++//==========================================================================
++static inline void SetDataAsOutput (void)
++{
++    void __iomem *sysc = (void __iomem *) KSEG1ADDR(MT7620_SYSC_BASE);
++    unsigned long l;
++
++    l = __raw_readl (sysc + 0x600);
++    l |= (0x0f);
++    __raw_writel (l, sysc + 0x600);
++
++    l = __raw_readl (sysc + 0x604);
++    l |= (0xf0);
++    __raw_writel (l, sysc + 0x604);
++}
++
++static inline void SetDataAsInput (void)
++{
++    void __iomem *sysc = (void __iomem *) KSEG1ADDR(MT7620_SYSC_BASE);
++    unsigned long l;
++
++    l = __raw_readl (sysc + 0x600);
++    l &= (~0x0f);
++    __raw_writel (l, sysc + 0x600);
++
++    l = __raw_readl (sysc + 0x604);
++    l &= (~0xf0);
++    __raw_writel (l, sysc + 0x604);
++}
++
++//==========================================================================
++// Set Data Pins
++//==========================================================================
++static inline void SetDataValue (unsigned char aCh)
++{
++    void __iomem *sysc = (void __iomem *) KSEG1ADDR(MT7620_SYSC_BASE);
++    unsigned long l;
++
++    // LSB
++    l = aCh & 0x0f;
++    __raw_writel (l, sysc + 0x630);
++    l = (~l) & 0xf;
++    __raw_writel (l, sysc + 0x640);
++
++    // MSB
++    l = (unsigned long)(aCh & 0xf0);
++    __raw_writel (l, sysc + 0x634);
++    l = (~l) & 0xf0;
++    __raw_writel (l, sysc + 0x644);
++}
++
++//==========================================================================
++// Get Data
++//==========================================================================
++static inline unsigned char GetDataValue (void)
++{
++    void __iomem *sysc = (void __iomem *) KSEG1ADDR(MT7620_SYSC_BASE);
++    unsigned long l;
++    unsigned char ret;
++
++    l = __raw_readl (sysc + 0x620);
++    ret = (l & 0x0f);
++    l = __raw_readl (sysc + 0x624);
++    ret |= (l & 0xf0);
++
++    return ret;
++}
++
++//==========================================================================
++// Data Open
++//==========================================================================
++static int data_open(struct inode *aINode, struct file *aFile)
++{
++    int ret;
++
++	/*
++	 * The miscdevice layer puts our struct miscdevice into the
++	 * filp->private_data field. We use this to find our private
++	 * data and then overwrite it with our own private structure.
++	 */
++    struct TDevice *priv = container_of (aFile->private_data, struct TDevice, miscdev);
++
++    if (priv == NULL)
++        return -ENOMEM;
++
++    aFile->private_data = priv;
++
++    ret = nonseekable_open(aINode, aFile);
++    if (ret)
++    {
++        dev_err (priv->dev, "nonseekable-open failed\n");
++        return ret;
++	}
++
++    return 0;
++}
++
++//==========================================================================
++// Data Write
++//==========================================================================
++static ssize_t data_write (struct file *aFile, const char __user *aBuf, size_t aCount, loff_t *aFpos)
++{
++    size_t ret;
++    struct TDevice *priv = aFile->private_data;
++    void __iomem *sysc = (void __iomem *) KSEG1ADDR(MT7620_SYSC_BASE);
++
++//    dev_info (priv->dev, "write() %d bytes.\n", aCount);
++
++    ret = 0;
++    SetCsLow ();
++    SetRsLow ();
++    SetDataValue (0x2c);
++    SetWrLow ();
++    SetWrHigh ();
++    SetRsHigh ();
++    while (aCount)
++    {
++        SetDataValue (*aBuf);
++        SetWrLow ();
++        SetWrHigh ();
++        aBuf ++;
++        aCount --;
++        ret ++;
++    }
++    SetCsHigh ();
++
++    return ret;
++}
++
++static long data_ioctl(struct file *aFile, unsigned int aIoCmd, unsigned long aIoParam)
++{
++    void __iomem *sysc = (void __iomem *) KSEG1ADDR(MT7620_SYSC_BASE);
++    int i;
++    int len;
++    struct TDevice *priv = aFile->private_data;
++    int ret = -EINVAL;
++    struct TRawLcdTransfer *tr = (struct TRawLcdTransfer *)aIoParam;
++
++//    dev_info (priv->dev, "ioctl() IOCMD=%02X, CMD=%02X, BUF=%02X %02X %02X %02X.\n",
++//                aIoCmd, tr->cmd, tr->buf[0], tr->buf[1], tr->buf[2], tr->buf[3]);
++
++    // Write command
++    if ((aIoCmd >= 0x00) && (aIoCmd <= 0x04))
++    {
++        len = aIoCmd & 0x0f;
++
++        SetCsLow ();
++        SetRsLow ();
++        SetDataValue (tr->cmd);
++        SetWrLow ();
++        SetWrHigh ();
++        SetRsHigh ();
++
++        for (i = 0; i < len; i ++)
++        {
++            SetDataValue (tr->buf[i]);
++            SetWrLow ();
++            SetWrHigh ();
++        }
++
++        SetCsHigh ();
++        ret = 0;
++    }
++
++    // Write Command, Dummy Read, Data Read
++    if ((aIoCmd >= 0x80) && (aIoCmd <= 0x84))
++    {
++//        len = aIoCmd & 0x0f;
++//
++//        SetCsLow ();
++//        SetRsLow ();
++//        SetDataValue (tr->cmd);
++//        SetWrLow ();
++//        SetWrHigh ();
++//        SetRsHigh ();
++//
++//        if (len)
++//        {
++//            SetDataAsInput ();
++//
++//            // Dummy Ready
++//            SetRdLow ();
++//            SetRdHigh ();
++//
++//            // Read Data
++//            for (i = 0; i < len; i ++)
++//            {
++//                SetRdLow ();
++//                SetRdHigh ();
++//                tr->buf[i] = GetDataValue ();
++//            }
++//            SetDataAsOutput ();
++//        }
++//        SetCsHigh ();
++        tr->buf[0] = 0xff;
++        tr->buf[1] = 0xff;
++        tr->buf[2] = 0xff;
++        tr->buf[3] = 0xff;
++        ret = 0;
++
++//        dev_info (priv->dev, "ioctl() return BUF=%02X %02X %02X %02X.\n",
++//                    tr->buf[0], tr->buf[1], tr->buf[2], tr->buf[3]);
++    }
++
++    // Read Keys
++    if (aIoCmd == 0x90)
++    {
++        SetCsHigh ();
++        SetDataAsInput ();
++        tr->buf[0] = GetDataValue ();
++        tr->buf[1] = GetDataValue ();
++        tr->buf[2] = GetDataValue ();
++        SetDataAsOutput ();
++        ret = 0;
++    }
++
++    //
++    return ret;
++}
++
++//==========================================================================
++// File Operation for Misc Device
++//==========================================================================
++static const struct file_operations KDataFops = {
++	.owner		    = THIS_MODULE,
++    .write          = data_write,
++	.open		    = data_open,
++    .unlocked_ioctl = data_ioctl,
++//	.release	= data_release,
++//	.read		= data_read,
++//	.poll		= data_poll,
++//	.mmap		= data_mmap,
++//	.llseek		= no_llseek,
++};
++
++//==========================================================================
++// Probe
++//==========================================================================
++static int __init dev_probe (struct platform_device *aPlatDev)
++{
++	void __iomem *sysc = (void __iomem *) KSEG1ADDR(MT7620_SYSC_BASE);
++
++    int i;
++    int ret;
++    struct TDevice *priv;
++
++	printk (KERN_INFO "RAW LCD probe\n");
++
++    do
++    {
++        // Allocate private data
++        priv = kzalloc (sizeof (struct TDevice), GFP_KERNEL);
++        if (!priv)
++        {
++	    	dev_err (&aPlatDev->dev, "Unable to allocate device private data\n");
++	    	ret = -ENOMEM;
++            break;
++        }
++        platform_set_drvdata (aPlatDev, priv);
++        priv->dev = &aPlatDev->dev;
++        dev_set_drvdata (priv->dev, priv);
++        for (i = 0; i < NUM_OF_GPIO; i ++)
++            priv->gpioClaimed[i] = false;
++
++        dev_info (&aPlatDev->dev, "Device private data allocated.\n");
++
++        // Request GPIOs
++        for (i = 0; i < NUM_OF_GPIO; i ++)
++        {
++            ret = devm_gpio_request (priv->dev, KGpioList[i], "rawlcd-cs");
++            if (ret)
++            {
++                dev_err (priv->dev, "uable to claim gpio %d.", KGpioList[i]);
++                break;
++            }
++            priv->gpioClaimed[i] = true;
++            gpio_direction_output (KGpioList[i], 0);
++        }
++        if (i < NUM_OF_GPIO)
++            break;
++
++        dev_info (priv->dev, "%d GPIOs claimed.\n", NUM_OF_GPIO);
++
++//        // Get the physical address
++//        ret = of_address_to_resource(of_node, 0, &res);
++//        if (ret)
++//        {
++//            dev_err (priv->dev, "Unable to find GPIO physical address.\n");
++//            ret = -ENODEV;
++//            break;
++//        }
++
++        // Setup misc device
++        priv->miscdev.minor = MISC_DYNAMIC_MINOR;
++        priv->miscdev.name = KDriverName;
++        priv->miscdev.fops = &KDataFops;
++
++        // Register the miscdevice
++        ret = misc_register(&priv->miscdev);
++        if (ret)
++        {
++            dev_err (&aPlatDev->dev, "Unable to register miscdevice\n");
++            misc_deregister (&priv->miscdev);
++            break;
++        }
++
++        dev_info (&aPlatDev->dev, "Misc Device Registered.\n");
++
++        // Init pins
++        SetCsHigh ();
++        SetWrHigh ();
++        SetRdHigh ();
++        SetRsHigh ();
++        SetDataAsOutput ();
++
++
++        //
++        ret = 0;
++    } while (0);
++
++    // Release GPIOs if fail of probe
++    if ((ret < 0) && (priv))
++    {
++        for (i = 0; i < NUM_OF_GPIO; i ++)
++        {
++            if (priv->gpioClaimed[i])
++            {
++                gpio_direction_input (KGpioList[i]);
++                devm_gpio_free (priv->dev, KGpioList[i]);
++                priv->gpioClaimed[i] = false;
++            }
++        }
++    }
++
++    return ret;
++}
++
++//==========================================================================
++// Remove
++//==========================================================================
++static int dev_remove(struct platform_device *aPlatDev)
++{
++    int i;
++	struct TDevice *priv = platform_get_drvdata (aPlatDev);
++
++	misc_deregister(&priv->miscdev);
++
++    // Release GPIOs
++    for (i = 0; i < NUM_OF_GPIO; i ++)
++    {
++        if (priv->gpioClaimed[i])
++        {
++            gpio_direction_input (KGpioList[i]);
++            devm_gpio_free (priv->dev, KGpioList[i]);
++            priv->gpioClaimed[i] = false;
++        }
++    }
++
++    dev_info (&aPlatDev->dev, "RAW LCD removed\n");
++    return 0;
++}
++
++//==========================================================================
++//==========================================================================
++static struct of_device_id gRawLcdMatch[] = {
++	{ .compatible = "rawlcd", },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, gRawLcdMatch);
++
++static struct platform_driver gRawLcdDriver = {
++	.probe	= dev_probe,
++	.remove	= dev_remove,
++	.driver	= {
++		.name	= KDriverName,
++		.owner	= THIS_MODULE,
++		.of_match_table = of_match_ptr(gRawLcdMatch),
++	},
++};
++
++static int __init dev_init(void)
++{
++	return platform_driver_register (&gRawLcdDriver);
++}
++
++static void __exit dev_exit(void)
++{
++	platform_driver_unregister (&gRawLcdDriver);
++}
++
++module_init(dev_init);
++module_exit(dev_exit);
++
++//==========================================================================
++//==========================================================================
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("DogRatIan");
++MODULE_DESCRIPTION(DEVICE_DESC);
++MODULE_VERSION(DEVICE_VERSION);
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -515,6 +515,11 @@ config VEXPRESS_SYSCFG
+ 	  bus. System Configuration interface is one of the possible means
+ 	  of generating transactions on this bus.
+ 
++config DOGRATIAN_RAWLCD
++	tristate "DogRatIan Raw LCD Interface"
++	help
++	  This driver provide a misc interface to direct control the LCD.
++
+ source "drivers/misc/c2port/Kconfig"
+ source "drivers/misc/eeprom/Kconfig"
+ source "drivers/misc/cb710/Kconfig"
+--- a/drivers/misc/Makefile
++++ b/drivers/misc/Makefile
+@@ -57,3 +57,4 @@ obj-$(CONFIG_ECHO)		+= echo/
+ obj-$(CONFIG_VEXPRESS_SYSCFG)	+= vexpress-syscfg.o
+ obj-$(CONFIG_CXL_BASE)		+= cxl/
+ obj-$(CONFIG_SOC_MT7620)	+= linkit.o
++obj-$(CONFIG_DOGRATIAN_RAWLCD)		+= rawlcd.o

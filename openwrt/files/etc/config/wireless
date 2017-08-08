@@ -1,0 +1,30 @@
+config wifi-device  radio0
+    option type     ralink
+    option variant  mt7628
+    option country  HK
+    option hwmode   11g
+    option htmode   HT40
+    option channel  auto
+    option disabled 0
+
+config wifi-iface   ap
+    option device   radio0
+    option mode     ap
+    option network  lan
+    option ifname   ra0
+    option ssid     'IOT7688'
+    option key      '12345678'
+    option seq      1
+    option hidden   1
+    option encryption psk2
+
+config wifi-iface   sta
+    option device   radio0
+    option mode     sta
+    option network  lan
+    option ifname   apcli0
+    option led      mediatek:orange:wifi
+    option ssid     'AP_IOT7688'
+    option key      '123456'
+    option disabled 0
+    option encryption psk

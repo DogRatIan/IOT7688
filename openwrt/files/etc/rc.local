@@ -1,0 +1,14 @@
+# Put your custom commands here that should be executed once
+# the system init finished. By default this file does nothing.
+
+# Update System clock from RTC
+/sbin/hwclock -s
+
+# Setup SPI-GPIO
+#/usr/sbin/insmod spi-gpio-custom bus1=1,15,17,16,0,10000000,14
+
+# Trigger DHCP on wifi
+sleep 10 ; ifup wifi &
+
+
+exit 0
