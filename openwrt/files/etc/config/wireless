@@ -13,7 +13,7 @@ config wifi-iface   ap
     option network  lan
     option ifname   ra0
     option ssid     'IOT7688'
-    option key      '12345678'
+    option key      '123456'
     option seq      1
     option hidden   1
     option encryption psk2
@@ -24,7 +24,7 @@ config wifi-iface   sta
     option network  lan
     option ifname   apcli0
     option led      mediatek:orange:wifi
-    option ssid     'AP_IOT7688'
+    option ssid     'YOUR_AP_NAME'
     option key      '123456'
     option disabled 0
     option encryption psk

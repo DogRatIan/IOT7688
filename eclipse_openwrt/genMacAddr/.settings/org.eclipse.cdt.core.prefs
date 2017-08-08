@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.516369479/STAGING_DIR/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.516369479/STAGING_DIR/operation=append
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.516369479/STAGING_DIR/value=${workspace_loc}/../openwrt/staging_dir/toolchain-mipsel_24kec+dsp_gcc-5.2.0_musl-1.1.11
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.516369479/append=true
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.516369479/appendContributed=true
