@@ -1,3 +1,5 @@
+*.o
+.depend
 /System.map
 /lks7688.ldr
 /u-boot
@@ -5,3 +7,12 @@
 /u-boot.srec
 /uboot.bin
 /.tmp_config
+/board/rt2880/librt2880.a
+/common/libcommon.a
+/cpu/ralink_soc/libralink_soc.a
+/disk/libdisk.a
+/drivers/libdrivers.a
+/fs/fat/libfat.a
+/lib_generic/libgeneric.a
+/lib_mips/libmips.a
+/net/libnet.a
