@@ -1,7 +1,11 @@
 This is the buildsystem for the OpenWrt Linux distribution,
-  modified for MT7688 module.
+  modified for IOT7688 module.
 
-## Setup of Ubuntu 14
+  Serial console is UART2, 115200 8N1.
+  Login user: root
+  Login password: root
+
+## Setup of Ubuntu 16.04
 
     sudo apt-get install build-essential git
     sudo apt-get install flex unzip subversion
@@ -12,20 +16,15 @@ This is the buildsystem for the OpenWrt Linux distribution,
 #### Run the following feeds commands to update the feeds package.
 
     ./scripts/feeds update -i
-    ./scripts/feeds install node
+    ./scripts/feeds install node openssh-server-pam ntpdate mtk-sdk-wifi
     ./scripts/feeds install snmpd
-    ./scripts/feeds install openssh-server-pam
-    ./scripts/feeds install ntpdate
-    ./scripts/feeds install evtest
-    ./scripts/feeds install i2c-tools
-    ./scripts/feeds install mtk-sdk-wifi
-
+    ./scripts/feeds install evtest i2c-tools
 
 #### Restore .config file
 
     git checkout .config
 
-#### Then run make menuconfig to update the .config files.
+#### Then run make menuconfig to update the .config files. After enter the menu, select exit and save.
 
     make menuconfig
 

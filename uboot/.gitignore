@@ -7,6 +7,7 @@
 /u-boot.srec
 /uboot.bin
 /.tmp_config
+/tools/mkimage
 /board/rt2880/librt2880.a
 /common/libcommon.a
 /cpu/ralink_soc/libralink_soc.a
