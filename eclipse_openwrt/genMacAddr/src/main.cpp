@@ -1,5 +1,5 @@
 //==========================================================================
-// Rule Handling
+// MAC Address generation
 //==========================================================================
 // Naming conventions
 // ~~~~~~~~~~~~~~~~~~
@@ -41,8 +41,9 @@
 #define MTD_OFFSET_LAN_MAC  0x28
 #define MTD_OFFSET_WIFI_MAC 0x04
 
-#define RANDOM_MAC_ETH_PREFIX   0xC2C2C2
-#define RANDOM_MAC_WIFI_PREFIX  0xC2C2C1
+// Random generated prefix from https://www.miniwebtool.com/mac-address-generator/
+#define RANDOM_MAC_ETH_PREFIX   0x14991B
+#define RANDOM_MAC_WIFI_PREFIX  0x1A4CF3
 
 
 //==========================================================================
