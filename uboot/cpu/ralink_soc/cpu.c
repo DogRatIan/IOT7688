@@ -53,6 +53,8 @@ int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 
 int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
+    raspi_prepare_reboot ();
+    printf ("SOFTRES\n");
 	*(volatile unsigned int*)(SOFTRES_REG) = GORESET;
 	return 1;
 }

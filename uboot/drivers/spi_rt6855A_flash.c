@@ -794,17 +794,19 @@ static int raspi_4byte_mode(int enable)
 		retval = raspi_cmd(code, 0, 0, 0, 0, user, SPIC_USER_MODE);
 #elif defined BBU_MODE
 		if (enable) {
+            printf ("raspi_4byte_mode ENTER 4BYTE MODE\n");
 			ra_or(SPI_REG_CTL, 0x3 << 19);
 			ra_or(SPI_REG_Q_CTL, 0x3 << 8);
             retval = bbu_spic_trans( code, 0, NULL, 1, 0, 0 );
 		}
-//		else {
-//			ra_and(SPI_REG_CTL, ~SPI_CTL_SIZE_MASK);
-//			ra_or(SPI_REG_CTL, 0x2 << 19);
-//			ra_and(SPI_REG_Q_CTL, ~(0x3 << 8));
-//			ra_or(SPI_REG_Q_CTL, 0x2 << 8);
-//		}
-//		retval = bbu_spic_trans(code, 0, NULL, 1, 0, 0);
+		else {
+            printf ("raspi_4byte_mode EXIT 4BYTE MODE\n");
+			ra_and(SPI_REG_CTL, ~SPI_CTL_SIZE_MASK);
+			ra_or(SPI_REG_CTL, 0x2 << 19);
+			ra_and(SPI_REG_Q_CTL, ~(0x3 << 8));
+			ra_or(SPI_REG_Q_CTL, 0x2 << 8);
+	   	    retval = bbu_spic_trans(code, 0, NULL, 1, 0, 0);
+		}
 #endif
 		// for Winbond's W25Q256FV, need to clear extend address register
 //		if ((!enable) && (spi_chip_info->id == 0xef))
@@ -813,10 +815,10 @@ static int raspi_4byte_mode(int enable)
 //			raspi_write_enable();
 //			raspi_write_rg(0xc5, &code);
 //		}
-		if (retval != 0) {
-			printf("%s: ret: %x\n", __func__, retval);
-			return -1;
-		}
+//		if (retval != 0) {
+//			printf("%s: ret: %x\n", __func__, retval);
+//			return -1;
+//		}
 	}
 	return 0;
 }
@@ -959,13 +961,13 @@ static int raspi_erase_sector(u32 offset)
 #elif defined BBU_MODE
 	if (spi_chip_info->addr4b)
 	{
-		raspi_4byte_mode(1);
+//		raspi_4byte_mode(1);
 		raspi_write_enable();
 	}
 	bbu_spic_trans(STM_OP_SECTOR_ERASE, offset, NULL, 4, 0, 0);
 	raspi_wait_ready(950);
-	if (spi_chip_info->addr4b)
-		raspi_4byte_mode(0);
+//	if (spi_chip_info->addr4b)
+//		raspi_4byte_mode(0);
 #endif
 
 	raspi_write_disable();
@@ -1017,9 +1019,30 @@ struct chip_info *chip_prob(void)
 	return match;
 }
 
+void raspi_prepare_reboot (void)
+{
+    unsigned long l;
+
+    l = ra_inl (RT2880_SYSCFG_REG);
+    if ((l & 0x02) == 0)
+        raspi_4byte_mode (0);
+
+}
+
 unsigned long raspi_init(void)
 {
+    unsigned long l;
+
+    l = ra_inl (RT2880_SYSCFG_REG);
+    printf ("RT2880_SYSCFG_REG=%08lX\n", l);
+    if (l & 0x02)
+        printf ("Boot from SPI 4-Byte ADR\n");
+    else
+        printf ("Boot from SPI 3-Byte ADR\n");
+        
+
 	spic_init();
+    raspi_4byte_mode (1);
 	spi_chip_info = chip_prob();
 	return spi_chip_info->sector_size * spi_chip_info->n_sectors;
 }
@@ -1124,8 +1147,8 @@ int raspi_read(char *buf, unsigned int from, int len)
 	}
 
 #elif defined BBU_MODE
-	if (spi_chip_info->addr4b)
-		raspi_4byte_mode(1);
+//	if (spi_chip_info->addr4b)
+//		raspi_4byte_mode(1);
 	do {
 		int rc, more;
 #ifdef MORE_BUF_MODE
@@ -1159,8 +1182,8 @@ int raspi_read(char *buf, unsigned int from, int len)
 			from += more;
 		}
 	} while (rdlen < len);
-	if (spi_chip_info->addr4b)
-		raspi_4byte_mode(0);
+//	if (spi_chip_info->addr4b)
+//		raspi_4byte_mode(0);
 #endif
 
 	return rdlen;
@@ -1209,8 +1232,8 @@ int raspi_write(char *buf, unsigned int to, int len)
 	/* what page do we start with? */
 	page_offset = to % FLASH_PAGESIZE;
 
-	if (spi_chip_info->addr4b)
-		raspi_4byte_mode(1);
+//	if (spi_chip_info->addr4b)
+//		raspi_4byte_mode(1);
 
 	/* write everything in PAGESIZE chunks */
 	while (len > 0) {
@@ -1323,8 +1346,8 @@ int raspi_write(char *buf, unsigned int to, int len)
 	}
 	raspi_wait_ready(100);
 	printf("\n");
-	if (spi_chip_info->addr4b)
-		raspi_4byte_mode(0);
+//	if (spi_chip_info->addr4b)
+//		raspi_4byte_mode(0);
 
 	raspi_write_disable();
 

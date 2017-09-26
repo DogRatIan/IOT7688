@@ -195,7 +195,7 @@ static int TestAllGpio (void)
     CGpio gpio;
     unsigned long tick_wait;
 
-    int gpio_list[] = {36, 37, 39, 40, 41, 42, 0, 1, 2, 3, 11,
+    int gpio_list[] = {37, 36, 39, 40, 41, 42, 0, 1, 2, 3, 11,
                        14, 15, 16, 17, 18, 19, -1};
 
     // Setup all GPIO
@@ -345,6 +345,15 @@ static int TestUart (void)
     }
 
     printf ("UART0 and UART1 opened.\n");
+
+    // Send few dummy data out
+    tx_buf[0] = 0x0a;
+    tx_buf[1] = 0x0a;
+    tx_buf[2] = 0x0a;
+    tx_buf[3] = 0x0a;
+    uart0.writePort (tx_buf, 4);
+    uart1.writePort (tx_buf, 4);
+    usleep (50000);
 
     // Flush data
     uart0.flushPort ();

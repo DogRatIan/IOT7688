@@ -2,6 +2,7 @@
 #define _SPI_SPI_H_
 
 
+void raspi_prepare_reboot (void);
 unsigned long raspi_init(void);
 int spi_env_init(void);
 
