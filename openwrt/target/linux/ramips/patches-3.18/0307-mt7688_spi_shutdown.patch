@@ -1,0 +1,48 @@
+--- a/drivers/mtd/devices/m25p80.c
++++ b/drivers/mtd/devices/m25p80.c
+@@ -28,6 +28,9 @@
+ #include <linux/spi/flash.h>
+ #include <linux/mtd/spi-nor.h>
+ 
++#include <asm/mach-ralink/ralink_regs.h>
++
++
+ #define	MAX_CMD_SIZE		6
+ struct m25p {
+ 	struct spi_device	*spi;
+@@ -338,6 +341,27 @@ static int m25p_remove(struct spi_device
+ 	return mtd_device_unregister(&flash->mtd);
+ }
+ 
++#define SYSC_REG_SYSCFG     0x010
++static int m25p_shutdown(struct spi_device *spi)
++{
++    unsigned long l;
++
++	struct m25p	*flash = spi_get_drvdata(spi);
++
++    l = rt_sysc_r32 (SYSC_REG_SYSCFG);
++    dev_info (&spi->dev, " SYSCFG0=%08lx.\n", l);
++    if (l & 0x02)
++    {
++        dev_info (&spi->dev, " Soc is boot from SPI 4-Byte ADR\n");
++    }
++    else
++    {
++        dev_info (&spi->dev, " Soc is boot from SPI 3-Byte ADR\n");
++        flash->command[0] = 0xe9;
++        spi_write(flash->spi, flash->command, 1);
++        dev_info (&spi->dev, " FLASH exit 4-byte address mode.\n");
++    }
++}
+ 
+ /*
+  * XXX This needs to be kept in sync with spi_nor_ids.  We can't share
+@@ -397,6 +421,7 @@ static struct spi_driver m25p80_driver =
+ 	.id_table	= m25p_ids,
+ 	.probe	= m25p_probe,
+ 	.remove	= m25p_remove,
++    .shutdown = m25p_shutdown,
+ 
+ 	/* REVISIT: many of these chips have deep power-down modes, which
+ 	 * should clearly be entered on suspend() to minimize power use.

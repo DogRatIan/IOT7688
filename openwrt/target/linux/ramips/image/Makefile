@@ -107,6 +107,7 @@ define MkImageSysupgrade/squashfs
 		echo "Warning: $(KDIR)/$(output_name) is too big" >&2; \
 	else \
 		$(CP) $(KDIR)/$(output_name) $(BIN_DIR)/$(output_name); \
+		$(CP) $(KDIR)/$(output_name) $(BIN_DIR)/lks7688.img; \
 	fi
 endef
 

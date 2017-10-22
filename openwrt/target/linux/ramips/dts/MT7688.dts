@@ -173,10 +173,6 @@
 		mediatek,cd-low;
 	};
 
-	rawlcd {
-		compatible = "rawlcd";
-	};
-
 	gpio-leds {
 		compatible = "gpio-leds";
 	
@@ -194,27 +190,9 @@
 		poll-interval = <100>;
 	
 		up {
-			label = "UP";
-			gpios = <&gpio0 0 0>;
-			linux,code = <103>;
-		};
-
-		down {
-			label = "DOWN";
-			gpios = <&gpio0 1 0>;
-			linux,code = <108>;
-		};
-
-		yes {
-			label = "YES";
-			gpios = <&gpio0 2 0>;
-			linux,code = <21>;
-		};
-
-		no {
-			label = "NO";
-			gpios = <&gpio0 3 0>;
-			linux,code = <49>;
+			label = "SPACEBAR";
+			gpios = <&gpio1 6 0>;
+			linux,code = <57>;
 		};
 	};
 
