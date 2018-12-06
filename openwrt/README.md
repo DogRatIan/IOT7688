@@ -1,9 +1,9 @@
 This is the buildsystem for the OpenWrt Linux distribution,
   modified for IOT7688 module.
 
-  Serial console is UART2, 115200 8N1.
-  Login user: root
-  Login password: root
+    Serial console is UART2, 115200 8N1.
+    Login user: root
+    Login password: root
 
 ## Setup of Ubuntu 16.04
 
@@ -24,10 +24,8 @@ This is the buildsystem for the OpenWrt Linux distribution,
 
     git checkout .config
 
-#### Then run make menuconfig to update the .config files. After enter the menu, select exit and save.
-
-    make menuconfig
-
-#### At last, start the build.
+#### Start the build.
 
     make V=s
+
+When done, a image file called "lks7688.img" will generated at "bin/ramips".

@@ -4,7 +4,7 @@ This is the UBoot bootloader source for IOT7688.
 # Compile
 Please install the cross toolchain required to build the source
 
-`sudo tar xjf buildroot-gcc342.tar.bz2 -C /opt/`
+`sudo tar -xjf buildroot-gcc342.tar.bz2 -C /opt/`
 
 Start building the source
 
